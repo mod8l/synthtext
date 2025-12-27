@@ -1,0 +1,606 @@
+{
+  "version": "1.0",
+  "description": "Platform-Specific Post Templates & Validation Rules for AutoMarket OS",
+  "platforms": [
+    {
+      "name": "LinkedIn",
+      "maxCharacters": 3000,
+      "optimal": {
+        "characterRange": [1200, 2500],
+        "idealType": "thought_leadership"
+      },
+      "contentTypes": [
+        {
+          "type": "thought_leadership",
+          "description": "Industry insights and professional perspectives",
+          "template": "{hook}\n\n{context_or_data}\n\n{insight_or_framework}\n\n{proof_point}\n\n{cta}",
+          "hook_examples": [
+            "Unpopular opinion: {take}",
+            "Most {industry} companies are missing {insight}",
+            "Here's what {competitor} got wrong about {topic}",
+            "5 reasons {trend} is reshaping {industry}",
+            "Data shows that {stat}, yet {counter_intuitive_insight}"
+          ],
+          "required_elements": [
+            "hook",
+            "context_or_data",
+            "insight",
+            "cta"
+          ]
+        },
+        {
+          "type": "thread_starter",
+          "description": "Multi-part professional discussion (5-7 posts)",
+          "template": "Post 1 (Hook):\n{hook}\n\nPosts 2-X (Development):\n{supporting_points}\n\nPost X (Conclusion):\n{conclusion_or_cta}",
+          "thread_length": "5-7 posts",
+          "max_post_length": 1300,
+          "required_elements": [
+            "hook",
+            "2+_supporting_points",
+            "conclusion"
+          ]
+        },
+        {
+          "type": "announcement",
+          "description": "Product updates, partnerships, milestones",
+          "template": "{announcement_headline}\n\n{what_changed_and_why}\n\n{customer_benefit}\n\n{cta_with_link}",
+          "required_elements": [
+            "what",
+            "why",
+            "customer_benefit",
+            "cta"
+          ]
+        },
+        {
+          "type": "case_study",
+          "description": "Customer success story with metrics",
+          "template": "{customer_intro}\n\nChallenge: {challenge}\nSolution: {solution}\nResult: {quantified_result}\n\n{cta}",
+          "required_elements": [
+            "customer_name_or_company",
+            "challenge",
+            "solution",
+            "quantified_result"
+          ]
+        }
+      ],
+      "cta_strategies": [
+        {
+          "type": "link_in_comments",
+          "example": "What's your take? Link in comments →"
+        },
+        {
+          "type": "dm_for_access",
+          "example": "Interested in early access? DM me"
+        },
+        {
+          "type": "join_community",
+          "example": "Join {X} professionals discussing this →"
+        },
+        {
+          "type": "question",
+          "example": "How do you approach this? Comment below ↓"
+        }
+      ],
+      "forbidden_patterns": [
+        "In today's fast-paced world",
+        "Click here",
+        "Limited time offer",
+        "Game-changer",
+        "Synergize",
+        "Reach out to our team",
+        "Solutions for all",
+        "hashtag spam (>5 hashtags)"
+      ],
+      "emoji_rules": {
+        "max_allowed": 2,
+        "recommended": [
+          "→",
+          "↓",
+          "✅",
+          "📊",
+          "💡",
+          "🎯"
+        ],
+        "avoid": [
+          "👍",
+          "❤️",
+          "🔥",
+          "🚀"
+        ]
+      },
+      "hashtag_rules": {
+        "optimal_count": "3-5",
+        "max_count": 10,
+        "examples": [
+          "#SaaS",
+          "#Marketing",
+          "#Growth",
+          "#B2B",
+          "#Leadership"
+        ]
+      }
+    },
+    {
+      "name": "Twitter",
+      "maxCharacters": 280,
+      "optimal": {
+        "characterRange": [120, 280],
+        "minimumEngagementWords": 2
+      },
+      "contentTypes": [
+        {
+          "type": "hot_take",
+          "description": "Controversial but defensible opinions",
+          "template": "❌ Wrong: {false_assumption}\n✅ Right: {true_insight}\n\n{explanation}",
+          "example": "❌ Wrong: Growth happens through paid ads\n✅ Right: Growth happens through compounding small advantages",
+          "guidelines": [
+            "Must be defensible with data/logic",
+            "Should provoke thought not outrage",
+            "Avoid brand-unsafe controversies"
+          ]
+        },
+        {
+          "type": "thread_starter",
+          "description": "Hook that leads to multi-part thread",
+          "template": "{hook_question_or_statement}\n\n🧵 {hint_at_value}",
+          "example": "Myth: You need a big marketing budget to grow.\n\n🧵 Here's what actually works (and costs $0):",
+          "thread_rules": [
+            "First tweet must intrigue",
+            "Each follow-up < 280 chars",
+            "Conclusion on last tweet",
+            "Encourage replies"
+          ]
+        },
+        {
+          "type": "announcement",
+          "description": "Product launches, partnerships, milestones",
+          "template": "{what}\n\n{why_it_matters}\n\n{cta}",
+          "example": "We just released Feature X.\n\nNow you can do Y without Z.\n\nTry it free: [link]",
+          "required_elements": [
+            "announcement",
+            "customer_benefit",
+            "link"
+          ]
+        },
+        {
+          "type": "real_time_reaction",
+          "description": "Timely responses to news/trends",
+          "template": "{event}\n\n{your_take}\n\n{call_to_action}",
+          "guidelines": [
+            "Post within 2-6 hours of news",
+            "Stay on-brand",
+            "Add unique perspective"
+          ]
+        },
+        {
+          "type": "personality",
+          "description": "Founder voice, behind-the-scenes, human moments",
+          "template": "{personal_observation}\n\n{lesson_or_insight}",
+          "guidelines": [
+            "Authentic, not corporate",
+            "Relatable struggles/wins",
+            "Tie back to product/values"
+          ]
+        }
+      ],
+      "hook_formulas": [
+        "Myth: {X}",
+        "❌ You're doing {X} wrong",
+        "Here's what nobody talks about: {X}",
+        "2025 prediction: {X}",
+        "{Company} raised $100M to solve {X}. They're missing {Y}.",
+        "The {X} move most {industry} miss: {Y}"
+      ],
+      "cta_strategies": [
+        {
+          "type": "url",
+          "format": "[Full URL with UTM params]"
+        },
+        {
+          "type": "reply_prompt",
+          "format": "What's your take? Reply below ↓"
+        },
+        {
+          "type": "retweet_request",
+          "format": "RT if you agree 🔄"
+        },
+        {
+          "type": "profile_link",
+          "format": "Follow for more: @yourhandle"
+        }
+      ],
+      "forbidden_patterns": [
+        "Hashtag spam",
+        "Too many emojis (>3)",
+        "Vague \"stay tuned\"",
+        "Reposted LinkedIn post",
+        "\"Click here\"",
+        "Breaking: {non-news}"
+      ],
+      "emoji_rules": {
+        "max_allowed": 3,
+        "recommended": [
+          "🧵",
+          "→",
+          "🔄",
+          "✅",
+          "❌"
+        ]
+      },
+      "hashtag_rules": {
+        "optimal_count": "0-2",
+        "max_count": 3,
+        "style": "Only if necessary for discoverability"
+      }
+    },
+    {
+      "name": "Instagram",
+      "maxCharacters": 2200,
+      "optimal": {
+        "singleImageCaption": [100, 300],
+        "carouselCaption": [200, 500]
+      },
+      "contentTypes": [
+        {
+          "type": "visual_story",
+          "description": "Single image with emotional/educational caption",
+          "template": "{hook_or_relatable_opening}\n\n{problem_or_observation}\n\n{solution_or_insight}\n\n{proof_point}\n\n[CTA]\n\n{hashtags}",
+          "caption_length": "100-300 chars",
+          "required_creative_brief": true,
+          "required_elements": [
+            "relatable_opening",
+            "problem_or_insight",
+            "cta"
+          ]
+        },
+        {
+          "type": "carousel",
+          "description": "Educational multi-slide post (3-10 slides)",
+          "template": "Slide 1: Hook/Title\nSlides 2-X: Educational content\nSlide X: CTA",
+          "slide_count": "3-10",
+          "slide_type": "design_heavy_with_minimal_text",
+          "required_creative_brief": true,
+          "guidelines": [
+            "Each slide is visual-first",
+            "Text is minimal (3-5 words per slide)",
+            "Caption ties it together",
+            "Clear progression"
+          ]
+        },
+        {
+          "type": "customer_feature",
+          "description": "Spotlight a user or testimonial",
+          "template": "@{customer_handle}\n\nTheir story: {problem} → {solution} → {result}\n\n\"{quote}\" - {customer_name}\n\n[CTA: Follow, DM, etc]",
+          "required_creative_brief": true,
+          "required_elements": [
+            "customer_mention",
+            "problem_solution_result",
+            "quote",
+            "cta"
+          ]
+        },
+        {
+          "type": "behind_the_scenes",
+          "description": "Team, culture, process moments",
+          "template": "{authentic_moment}\n\n{why_this_matters}\n\n[CTA or reflection]",
+          "style": "candid, real, not overly polished",
+          "required_creative_brief": true
+        },
+        {
+          "type": "trend_adaptation",
+          "description": "Brand-safe adaptation of trends/memes",
+          "template": "{trend_element}\n\n{brand_application}\n\n[CTA]",
+          "guidelines": [
+            "Only adapt trends that fit brand",
+            "Add unique value",
+            "Avoid outdated trends"
+          ]
+        }
+      ],
+      "creative_brief_requirements": {
+        "subject": "Specific visual description (2-3 sentences)",
+        "style": "Minimalist|3D Render|Cinematic|Candid|Infographic|Typography",
+        "mood": "Aspirational|Educational|Authentic|Bold|Warm",
+        "color_palette": "Brand colors (primary, secondary, accent)",
+        "overlay_text": "3-5 keywords for accessibility & searchability",
+        "elements": "Specific objects, people, concepts to include",
+        "composition": "Rule of thirds|Center focus|Split screen",
+        "dimensions": "1080x1350 (feed) or 1080x1920 (Reels)",
+        "dont_include": "Stock photo feel, competitor logos, outdated tech",
+        "reference_style": "Similar to {brand}",
+        "prompt_for_ai": "Detailed prompt for Stable Diffusion/ComfyUI"
+      },
+      "cta_strategies": [
+        {
+          "type": "save_post",
+          "format": "Save this for later 📌",
+          "purpose": "Engagement without pressure"
+        },
+        {
+          "type": "dm_for_more",
+          "format": "DM for [access/details/free resource]",
+          "purpose": "Direct lead capture"
+        },
+        {
+          "type": "follow_for_more",
+          "format": "Follow for weekly [topic] tips",
+          "purpose": "Audience growth"
+        },
+        {
+          "type": "link_in_bio",
+          "format": "Link in bio for [details]",
+          "purpose": "Direct traffic with trackable link"
+        },
+        {
+          "type": "comment_prompt",
+          "format": "What's your experience? Comment below 👇",
+          "purpose": "Engagement & insights"
+        }
+      ],
+      "hashtag_rules": {
+        "optimal_count": "15-30",
+        "max_count": 30,
+        "placement": "End of caption, not in middle",
+        "mix": "3-5 branded + 5-10 niche + 5-20 trend",
+        "examples": {
+          "branded": [
+            "#YourBrandName",
+            "#BrandTagline"
+          ],
+          "niche": [
+            "#SaaS",
+            "#ProductMarketing",
+            "#B2B"
+          ],
+          "trend": [
+            "#FYP",
+            "#Explore",
+            "#ForYou"
+          ]
+        }
+      },
+      "forbidden_patterns": [
+        "Stock photo aesthetic (unless brand standard)",
+        "Caption longer than image suggests",
+        "Hashtags in middle of caption",
+        "CTA before value delivery",
+        "Generic inspirational quotes without context",
+        "Overly promotional tone"
+      ],
+      "emoji_rules": {
+        "recommended": [
+          "📌",
+          "👇",
+          "💡",
+          "✨",
+          "🎯",
+          "🔗"
+        ],
+        "max_allowed": 3,
+        "placement": "End of caption or with CTA"
+      }
+    },
+    {
+      "name": "Facebook",
+      "maxCharacters": null,
+      "description": "No strict character limit; focus on readability & community",
+      "contentTypes": [
+        {
+          "type": "announcement",
+          "description": "News, partnerships, product launches",
+          "template": "{headline}\n\n{context}\n\n{why_it_matters}\n\n[Link or CTA]",
+          "required_elements": [
+            "clear_headline",
+            "context",
+            "customer_benefit"
+          ]
+        },
+        {
+          "type": "discussion",
+          "description": "Question that sparks conversation",
+          "template": "{question}\n\n{context_if_needed}\n\n{engagement_prompt}",
+          "guidelines": [
+            "Open-ended question",
+            "Invite multiple perspectives",
+            "Respond actively to comments"
+          ]
+        },
+        {
+          "type": "event_announcement",
+          "description": "Webinar, conference, meetup announcements",
+          "template": "{event_title}\n\nWhen: {date_time}\nWhere: {location_or_url}\n\n{event_description}\n\n[Register/RSVP Button]",
+          "required_elements": [
+            "event_name",
+            "date_time",
+            "registration_link"
+          ]
+        },
+        {
+          "type": "customer_feature",
+          "description": "Success story or customer spotlight",
+          "template": "Meet {customer_name}!\n\n{their_challenge}\n\nHow they used {product}: {solution}\n\nResult: {outcome}\n\n\"{testimonial}\"",
+          "required_elements": [
+            "customer_name",
+            "challenge",
+            "solution",
+            "quantified_result"
+          ]
+        },
+        {
+          "type": "educational_content",
+          "description": "Tips, guides, how-tos",
+          "template": "{title}\n\n{intro}\n\n1. {tip_1}\n2. {tip_2}\n3. {tip_3}\n\n{conclusion_with_cta}",
+          "guidelines": [
+            "Numbered or bulleted for readability",
+            "Actionable steps",
+            "Not overly promotional"
+          ]
+        },
+        {
+          "type": "exclusive_offer",
+          "description": "Community-specific deals or early access",
+          "template": "Exclusive for our community:\n\n{offer_description}\n\nCode: {code} (if applicable)\n\nValid: {dates}\n\n[Claim Button]",
+          "tone": "Appreciative, not pushy",
+          "required_elements": [
+            "offer_details",
+            "expiration_date",
+            "cta_button"
+          ]
+        }
+      ],
+      "cta_strategies": [
+        {
+          "type": "register_button",
+          "format": "Register / RSVP Button",
+          "ideal_for": "Events, webinars"
+        },
+        {
+          "type": "learn_more_button",
+          "format": "Learn More Button (links to blog/page)",
+          "ideal_for": "Educational content, announcements"
+        },
+        {
+          "type": "shop_now",
+          "format": "Shop Now Button",
+          "ideal_for": "Promotions, product features"
+        },
+        {
+          "type": "dm_message",
+          "format": "Message us or reply in comments",
+          "ideal_for": "Support, questions"
+        },
+        {
+          "type": "engagement_question",
+          "format": "Open-ended question in comments",
+          "ideal_for": "Discussions, community building"
+        }
+      ],
+      "forbidden_patterns": [
+        "\"Like if you agree\" engagement bait",
+        "Link shorteners (use full UTM links)",
+        "\"Share this post\" requests",
+        "Vague CTAs (\"Stay tuned\")",
+        "Corporate jargon (\"leverage\", \"synergize\")",
+        "Overly promotional tone"
+      ],
+      "tone_guidelines": [
+        "Friendly and conversational",
+        "Community-focused",
+        "Authentic (show personality)",
+        "Helpful and educational",
+        "Not pushy or salesy"
+      ],
+      "emoji_rules": {
+        "max_allowed": 3,
+        "recommended": [
+          "👇",
+          "💡",
+          "✨",
+          "🎉",
+          "📌"
+        ]
+      }
+    }
+  ],
+  "validation_rules": {
+    "universal": [
+      {
+        "name": "No hallucinations",
+        "description": "All facts must come from website content",
+        "check": "Every claim is sourced from Firecrawl markdown"
+      },
+      {
+        "name": "Brand voice consistency",
+        "description": "Tone, vocabulary, personality match website",
+        "check": "Compare against identified brand voice"
+      },
+      {
+        "name": "No generic phrases",
+        "description": "Avoid clichés and low-effort language",
+        "check": "Scan against banned phrase list"
+      },
+      {
+        "name": "Clear CTA",
+        "description": "Every post must have actionable next step",
+        "check": "CTA is specific and natural"
+      },
+      {
+        "name": "Character count compliance",
+        "description": "Stay within platform maximums",
+        "check": "Count characters, flag if over limit"
+      }
+    ],
+    "platform_specific": {
+      "linkedin": [
+        {
+          "name": "Data point or insight required",
+          "rule": "Post must include metric, statistic, or non-obvious insight"
+        },
+        {
+          "name": "Professional tone",
+          "rule": "No slang, memes, or overly casual language"
+        },
+        {
+          "name": "Hashtag limit",
+          "rule": "Max 10 hashtags (recommend 3-5)"
+        }
+      ],
+      "twitter": [
+        {
+          "name": "Engagement hook",
+          "rule": "Post must invite response (question, opinion, reaction)"
+        },
+        {
+          "name": "Originality check",
+          "rule": "Not a direct repurposing of another platform's post"
+        },
+        {
+          "name": "Conciseness",
+          "rule": "If thread, each tweet standalone valuable"
+        }
+      ],
+      "instagram": [
+        {
+          "name": "Creative brief mandatory",
+          "rule": "Every post with image must have detailed visual brief"
+        },
+        {
+          "name": "Caption tells story",
+          "rule": "Caption not just listing features; has narrative"
+        },
+        {
+          "name": "Hashtag strategy",
+          "rule": "15-30 relevant hashtags, at end of caption"
+        }
+      ],
+      "facebook": [
+        {
+          "name": "Community engagement",
+          "rule": "Post should encourage discussion or action"
+        },
+        {
+          "name": "Link format",
+          "rule": "Use full URLs with UTM params, not shortened links"
+        },
+        {
+          "name": "Authentic tone",
+          "rule": "No corporate speak; conversational and friendly"
+        }
+      ]
+    }
+  },
+  "guardrail_checklist": {
+    "before_publishing": [
+      "❌ Hallucinations: Facts sourced from website",
+      "❌ Brand voice: Matches website tone & personality",
+      "❌ Generic phrases: Banned list check",
+      "❌ CTA: Clear and natural",
+      "❌ Character count: Within platform limits",
+      "❌ Guardrails: Platform-specific rules met",
+      "❌ UTM tracking: Links include UTM params",
+      "❌ Creative brief: Image posts have detailed briefs",
+      "❌ Accuracy: No exaggerated claims",
+      "❌ Spelling/grammar: Proofread"
+    ]
+  }
+}

@@ -1,0 +1,780 @@
+{
+  "version": "1.0",
+  "description": "Twenty CRM Data Schema for AutoMarket OS Campaign Tracking",
+  "entities": [
+    {
+      "name": "Campaign",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "description": "Unique campaign identifier"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "maxLength": 255,
+          "description": "Campaign name (e.g., '2025-01-15 - Product Launch')"
+        },
+        {
+          "name": "campaignType",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "Social_Media_MultiChannel",
+            "LinkedIn_Only",
+            "Twitter_Only",
+            "Instagram_Only",
+            "Facebook_Only",
+            "Content_Marketing",
+            "Email_Campaign",
+            "Webinar",
+            "Event"
+          ],
+          "description": "Type of campaign"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "Draft",
+            "Scheduled",
+            "Running",
+            "Paused",
+            "Completed",
+            "Archived"
+          ],
+          "description": "Current campaign status"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "description": "Detailed campaign description and objectives"
+        },
+        {
+          "name": "startDate",
+          "type": "datetime",
+          "required": true,
+          "description": "Campaign start date/time"
+        },
+        {
+          "name": "endDate",
+          "type": "datetime",
+          "required": false,
+          "description": "Campaign end date/time (null if ongoing)"
+        },
+        {
+          "name": "channels",
+          "type": "array",
+          "itemType": "enum",
+          "values": [
+            "LinkedIn",
+            "Twitter",
+            "Instagram",
+            "Facebook",
+            "TikTok",
+            "Email",
+            "Blog",
+            "Website",
+            "Webinar",
+            "Event"
+          ],
+          "required": true,
+          "description": "Channels this campaign uses"
+        },
+        {
+          "name": "postCount",
+          "type": "integer",
+          "required": false,
+          "description": "Total number of posts in campaign"
+        },
+        {
+          "name": "estimatedImpressions",
+          "type": "integer",
+          "required": false,
+          "description": "Estimated reach/impressions"
+        },
+        {
+          "name": "estimatedLeads",
+          "type": "integer",
+          "required": false,
+          "description": "Expected number of leads from campaign"
+        },
+        {
+          "name": "estimatedConversionRate",
+          "type": "decimal",
+          "required": false,
+          "description": "Expected conversion rate (e.g., 0.05 = 5%)"
+        },
+        {
+          "name": "budgetAllocated",
+          "type": "decimal",
+          "required": false,
+          "description": "Marketing budget allocated to campaign (USD)"
+        },
+        {
+          "name": "budgetSpent",
+          "type": "decimal",
+          "required": false,
+          "description": "Actual spending to date (USD)"
+        },
+        {
+          "name": "actualImpressions",
+          "type": "integer",
+          "required": false,
+          "description": "Actual impressions/reach achieved"
+        },
+        {
+          "name": "actualClicks",
+          "type": "integer",
+          "required": false,
+          "description": "Actual clicks to website/landing page"
+        },
+        {
+          "name": "actualLeads",
+          "type": "integer",
+          "required": false,
+          "description": "Actual leads generated"
+        },
+        {
+          "name": "actualConversions",
+          "type": "integer",
+          "required": false,
+          "description": "Actual conversions/closed deals"
+        },
+        {
+          "name": "revenueGenerated",
+          "type": "decimal",
+          "required": false,
+          "description": "Revenue attributed to campaign (USD)"
+        },
+        {
+          "name": "roi",
+          "type": "decimal",
+          "required": false,
+          "description": "ROI multiple (e.g., 3.5 = $3.50 revenue per $1 spent)"
+        },
+        {
+          "name": "owner",
+          "type": "relation",
+          "relationType": "many_to_one",
+          "targetEntity": "User",
+          "required": true,
+          "description": "Responsible team member"
+        },
+        {
+          "name": "linkedCompany",
+          "type": "relation",
+          "relationType": "many_to_one",
+          "targetEntity": "Company",
+          "required": false,
+          "description": "Associated company (if targeting specific accounts)"
+        },
+        {
+          "name": "trackingLinks",
+          "type": "array",
+          "itemType": "object",
+          "required": false,
+          "description": "Campaign URLs with UTM parameters"
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "description": "Internal notes about campaign"
+        },
+        {
+          "name": "tags",
+          "type": "array",
+          "itemType": "string",
+          "required": false,
+          "description": "Campaign tags (e.g., product_launch, webinar, content)"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Creation timestamp"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Last update timestamp"
+        }
+      ],
+      "relationships": {
+        "hasManyPosts": {
+          "targetEntity": "CampaignPost",
+          "type": "one_to_many",
+          "foreignKey": "campaignId"
+        },
+        "hasManyLeads": {
+          "targetEntity": "Lead",
+          "type": "one_to_many",
+          "foreignKey": "campaignId"
+        },
+        "hasManyTasks": {
+          "targetEntity": "Task",
+          "type": "one_to_many",
+          "foreignKey": "campaignId"
+        }
+      }
+    },
+    {
+      "name": "CampaignPost",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "description": "Unique post identifier"
+        },
+        {
+          "name": "campaignId",
+          "type": "uuid",
+          "required": true,
+          "description": "Foreign key to Campaign"
+        },
+        {
+          "name": "postId",
+          "type": "string",
+          "required": true,
+          "example": "linkedin-001",
+          "description": "Internal post ID (e.g., linkedin-001, twitter-003)"
+        },
+        {
+          "name": "platform",
+          "type": "enum",
+          "required": true,
+          "values": [
+            "LinkedIn",
+            "Twitter",
+            "Instagram",
+            "Facebook",
+            "TikTok",
+            "Blog"
+          ],
+          "description": "Social media platform"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "required": true,
+          "description": "Post copy/content"
+        },
+        {
+          "name": "contentType",
+          "type": "enum",
+          "values": [
+            "thought_leadership",
+            "hot_take",
+            "announcement",
+            "thread",
+            "visual_story",
+            "educational",
+            "customer_feature"
+          ],
+          "required": false,
+          "description": "Type of content"
+        },
+        {
+          "name": "scheduledAt",
+          "type": "datetime",
+          "required": false,
+          "description": "Scheduled publish time"
+        },
+        {
+          "name": "publishedAt",
+          "type": "datetime",
+          "required": false,
+          "description": "Actual publish time"
+        },
+        {
+          "name": "utmLink",
+          "type": "string",
+          "required": false,
+          "format": "url",
+          "description": "Link with UTM parameters"
+        },
+        {
+          "name": "utm": {
+            "utm_source": "automarket",
+            "utm_medium": "string",
+            "utm_campaign": "string",
+            "utm_content": "string",
+            "utm_term": "string"
+          },
+          "type": "object",
+          "required": false,
+          "description": "UTM parameter breakdown"
+        },
+        {
+          "name": "ctaText",
+          "type": "string",
+          "required": false,
+          "description": "Call-to-action text"
+        },
+        {
+          "name": "expectedEngagement",
+          "type": "enum",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "viral"
+          ],
+          "required": false,
+          "description": "Expected engagement level"
+        },
+        {
+          "name": "impressions",
+          "type": "integer",
+          "required": false,
+          "description": "Actual impressions/reach"
+        },
+        {
+          "name": "engagementCount",
+          "type": "integer",
+          "required": false,
+          "description": "Total engagements (likes, comments, shares, retweets)"
+        },
+        {
+          "name": "engagementRate",
+          "type": "decimal",
+          "required": false,
+          "description": "Engagement rate (engagements ÷ impressions)"
+        },
+        {
+          "name": "clicks",
+          "type": "integer",
+          "required": false,
+          "description": "Click-throughs on link"
+        },
+        {
+          "name": "leads",
+          "type": "integer",
+          "required": false,
+          "description": "Leads attributed to post"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "values": [
+            "draft",
+            "scheduled",
+            "published",
+            "archived"
+          ],
+          "required": true,
+          "description": "Post status"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Creation timestamp"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Last update timestamp"
+        }
+      ],
+      "relationships": {
+        "belongsTooCampaign": {
+          "targetEntity": "Campaign",
+          "type": "many_to_one",
+          "foreignKey": "campaignId"
+        }
+      }
+    },
+    {
+      "name": "Lead",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "description": "Unique lead identifier"
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "required": true,
+          "format": "email",
+          "description": "Lead email address"
+        },
+        {
+          "name": "firstName",
+          "type": "string",
+          "required": false,
+          "description": "First name"
+        },
+        {
+          "name": "lastName",
+          "type": "string",
+          "required": false,
+          "description": "Last name"
+        },
+        {
+          "name": "company",
+          "type": "string",
+          "required": false,
+          "description": "Company name"
+        },
+        {
+          "name": "jobTitle",
+          "type": "string",
+          "required": false,
+          "description": "Job title"
+        },
+        {
+          "name": "campaignId",
+          "type": "uuid",
+          "required": false,
+          "description": "Campaign that generated lead"
+        },
+        {
+          "name": "leadSource",
+          "type": "enum",
+          "values": [
+            "social_linkedin",
+            "social_twitter",
+            "social_instagram",
+            "social_facebook",
+            "social_tiktok",
+            "email",
+            "blog",
+            "website",
+            "webinar",
+            "event",
+            "organic_search",
+            "paid_search",
+            "referral",
+            "direct"
+          ],
+          "required": true,
+          "description": "Source of lead"
+        },
+        {
+          "name": "interestArea",
+          "type": "enum",
+          "values": [
+            "Product_Features",
+            "Pricing_Plans",
+            "Case_Studies",
+            "Implementation",
+            "Integration",
+            "Demo_Request",
+            "Free_Trial",
+            "General_Inquiry"
+          ],
+          "required": false,
+          "description": "What the lead is interested in"
+        },
+        {
+          "name": "intentSignal",
+          "type": "enum",
+          "values": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "required": false,
+          "description": "Intent to purchase (based on behavior)"
+        },
+        {
+          "name": "estimatedDealSize",
+          "type": "enum",
+          "values": [
+            "Small",
+            "Mid_Market",
+            "Enterprise"
+          ],
+          "required": false,
+          "description": "Expected deal value"
+        },
+        {
+          "name": "utm": {
+            "utm_source": "string",
+            "utm_medium": "string",
+            "utm_campaign": "string",
+            "utm_content": "string",
+            "utm_term": "string"
+          },
+          "type": "object",
+          "required": false,
+          "description": "UTM parameters from click"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "values": [
+            "New",
+            "Qualified",
+            "Disqualified",
+            "Converted"
+          ],
+          "required": false,
+          "description": "Lead status in funnel"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Lead capture timestamp"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Last update timestamp"
+        }
+      ],
+      "relationships": {
+        "belongsToCampaign": {
+          "targetEntity": "Campaign",
+          "type": "many_to_one",
+          "foreignKey": "campaignId"
+        }
+      }
+    },
+    {
+      "name": "Task",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "description": "Unique task identifier"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": true,
+          "maxLength": 255,
+          "description": "Task title"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "description": "Detailed task description"
+        },
+        {
+          "name": "campaignId",
+          "type": "uuid",
+          "required": false,
+          "description": "Associated campaign (if applicable)"
+        },
+        {
+          "name": "taskType",
+          "type": "enum",
+          "values": [
+            "Campaign_Review",
+            "Content_Approval",
+            "Follow_Up",
+            "Analysis",
+            "Optimization"
+          ],
+          "required": false,
+          "description": "Type of task"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "values": [
+            "Not_Started",
+            "In_Progress",
+            "Completed",
+            "Blocked"
+          ],
+          "required": true,
+          "description": "Current task status"
+        },
+        {
+          "name": "assignedTo",
+          "type": "relation",
+          "relationType": "many_to_one",
+          "targetEntity": "User",
+          "required": false,
+          "description": "User responsible for task"
+        },
+        {
+          "name": "dueDate",
+          "type": "datetime",
+          "required": false,
+          "description": "Due date/time"
+        },
+        {
+          "name": "completedAt",
+          "type": "datetime",
+          "required": false,
+          "description": "Completion timestamp"
+        },
+        {
+          "name": "priority",
+          "type": "enum",
+          "values": [
+            "Low",
+            "Medium",
+            "High",
+            "Urgent"
+          ],
+          "required": false,
+          "description": "Task priority"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Creation timestamp"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime",
+          "required": true,
+          "readOnly": true,
+          "description": "Last update timestamp"
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "Campaign Dashboard",
+      "entity": "Campaign",
+      "filters": [
+        {
+          "field": "status",
+          "operator": "in",
+          "value": [
+            "Running",
+            "Scheduled"
+          ]
+        }
+      ],
+      "groupBy": "status",
+      "sortBy": [
+        {
+          "field": "startDate",
+          "direction": "desc"
+        }
+      ],
+      "displayFields": [
+        "name",
+        "status",
+        "channels",
+        "actualLeads",
+        "roi",
+        "owner"
+      ]
+    },
+    {
+      "name": "Lead Pipeline",
+      "entity": "Lead",
+      "filters": [
+        {
+          "field": "status",
+          "operator": "!=",
+          "value": "Disqualified"
+        }
+      ],
+      "groupBy": "status",
+      "displayFields": [
+        "email",
+        "company",
+        "interestArea",
+        "intentSignal",
+        "campaignId"
+      ]
+    },
+    {
+      "name": "Campaign Performance",
+      "entity": "Campaign",
+      "displayFields": [
+        "name",
+        "estimatedLeads",
+        "actualLeads",
+        "budgetSpent",
+        "revenueGenerated",
+        "roi"
+      ],
+      "sortBy": [
+        {
+          "field": "roi",
+          "direction": "desc"
+        }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "name": "Auto-Tag High Intent Leads",
+      "trigger": {
+        "entity": "Lead",
+        "event": "created"
+      },
+      "conditions": [
+        {
+          "field": "intentSignal",
+          "operator": "equals",
+          "value": "High"
+        }
+      ],
+      "action": {
+        "type": "addTag",
+        "tags": [
+          "high_intent"
+        ]
+      }
+    },
+    {
+      "name": "Create Follow-Up Task for Low Intent",
+      "trigger": {
+        "entity": "Lead",
+        "event": "created"
+      },
+      "conditions": [
+        {
+          "field": "intentSignal",
+          "operator": "equals",
+          "value": "Low"
+        }
+      ],
+      "action": {
+        "type": "createTask",
+        "taskType": "Follow_Up",
+        "daysUntilDue": 7
+      }
+    },
+    {
+      "name": "Update Campaign ROI on Close",
+      "trigger": {
+        "entity": "Lead",
+        "event": "converted"
+      },
+      "action": {
+        "type": "updateParentCampaign",
+        "fields": [
+          "actualConversions",
+          "revenueGenerated",
+          "roi"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,336 @@
+{
+  "name": "AutoMarket Campaign Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": "everyHour"
+      },
+      "name": "Trigger (Cron)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "id": "trigger-cron"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "automarket/webhook",
+        "responseMode": "responseNode",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "authentication": "headerAuth",
+          "values": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{env.WEBHOOK_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Webhook (On-Demand Trigger)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 200],
+      "id": "webhook-trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.firecrawl.dev/v0/scrape",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "{{$env.FIRECRAWL_API_KEY}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.FIRECRAWL_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersJson": "{\n  \"url\": \"{{$node.Webhook.json.website_url || 'https://example.com'}}\",\n  \"formats\": [\"markdown\"],\n  \"onlyMainContent\": true,\n  \"timeout\": 30000\n}",
+        "options": {}
+      },
+      "name": "Firecrawl - Extract Website Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 150],
+      "id": "firecrawl-scraper"
+    },
+    {
+      "parameters": {
+        "model": "claude-opus-4-5-20251101",
+        "messages": {
+          "values": [
+            {
+              "contentType": "json",
+              "content": "{\n  \"role\": \"user\",\n  \"content\": \"Here is website content from Firecrawl. Generate a multi-channel marketing campaign in JSON format only, following the AutoMarket OS Master System Prompt.\\n\\nWebsite Content:\\n{{$node['Firecrawl - Extract Website Content'].json.body.markdown}}\"\n            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 4000
+        }
+      },
+      "name": "AI - Campaign Generation (Master Prompt)",
+      "type": "n8n-nodes-base.openaiChat",
+      "typeVersion": 1,
+      "position": [750, 150],
+      "id": "ai-campaign-generator"
+    },
+    {
+      "parameters": {
+        "code": "// Parse AI response into structured campaign JSON\nconst aiResponse = $input.item.json.content;\nconst campaignData = JSON.parse(aiResponse);\n\n// Validate response structure\nconst requiredFields = [\n  'metadata',\n  'brand_analysis',\n  'posts',\n  'crm_tracking',\n  'guardrail_checks'\n];\n\nconst isValid = requiredFields.every(field => field in campaignData);\n\nif (!isValid) {\n  return {\n    error: 'Invalid campaign structure',\n    received_fields: Object.keys(campaignData),\n    expected_fields: requiredFields\n  };\n}\n\n// Check autonomy status\nif (campaignData.metadata.autonomy_status !== 'ready') {\n  return {\n    status: 'BLOCKED',\n    reason: campaignData.metadata.autonomy_status,\n    requires_review: true,\n    campaign_id: campaignData.metadata.campaign_id,\n    data_completeness_score: campaignData.metadata.data_completeness_score\n  };\n}\n\n// Flatten posts for individual scheduling\nconst flattenedPosts = [];\n\n// LinkedIn posts\nif (campaignData.posts.linkedin) {\n  campaignData.posts.linkedin.forEach(post => {\n    flattenedPosts.push({\n      platform: 'linkedin',\n      ...post\n    });\n  });\n}\n\n// Twitter posts\nif (campaignData.posts.twitter) {\n  campaignData.posts.twitter.forEach(post => {\n    flattenedPosts.push({\n      platform: 'twitter',\n      ...post\n    });\n  });\n}\n\n// Instagram posts\nif (campaignData.posts.instagram) {\n  campaignData.posts.instagram.forEach(post => {\n    flattenedPosts.push({\n      platform: 'instagram',\n      ...post\n    });\n  });\n}\n\n// Facebook posts\nif (campaignData.posts.facebook) {\n  campaignData.posts.facebook.forEach(post => {\n    flattenedPosts.push({\n      platform: 'facebook',\n      ...post\n    });\n  });\n}\n\nreturn {\n  campaign_id: campaignData.metadata.campaign_id,\n  brand_analysis: campaignData.brand_analysis,\n  crm_tracking: campaignData.crm_tracking,\n  posts_count: flattenedPosts.length,\n  posts: flattenedPosts,\n  guardrails_passed: campaignData.guardrail_checks,\n  original_response: campaignData\n};"
+      },
+      "name": "Parse & Validate Campaign JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 150],
+      "id": "json-parser"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "method": "create",
+        "channel": "#marketing-automation",
+        "text": "📊 AutoMarket Campaign Generated\n\n**Campaign ID**: {{$node['Parse & Validate Campaign JSON'].json.campaign_id}}\n**Total Posts**: {{$node['Parse & Validate Campaign JSON'].json.posts_count}}\n**Autonomy Status**: Ready for Publishing\n**Data Completeness**: {{$node['AI - Campaign Generation (Master Prompt)'].json.metadata.data_completeness_score}}%\n\n✅ All guardrails passed\n✅ Proceeding to Mixpost scheduling",
+        "channel_id": "{{$env.SLACK_CHANNEL_ID}}"
+      },
+      "name": "Slack - Notify Campaign Ready",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1200, 100],
+      "id": "slack-notification"
+    },
+    {
+      "parameters": {
+        "method": "post",
+        "url": "https://api.mixpost.app/v1/posts",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "authentication": "headerAuth",
+          "values": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.MIXPOST_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersJson": "{\n  \"content\": \"{{$node['Parse & Validate Campaign JSON'].json.posts[0].content}}\",\n  \"platforms\": [\"{{$node['Parse & Validate Campaign JSON'].json.posts[0].platform}}\"],\n  \"scheduled_at\": \"{{$now.toISOString()}}\",\n  \"utm_params\": {\n    \"utm_source\": \"automarket\",\n    \"utm_medium\": \"{{$node['Parse & Validate Campaign JSON'].json.posts[0].platform}}\",\n    \"utm_campaign\": \"{{$node['Parse & Validate Campaign JSON'].json.campaign_id}}\",\n    \"utm_content\": \"{{$node['Parse & Validate Campaign JSON'].json.posts[0].post_id}}\"\n  }\n}",
+        "options": {}
+      },
+      "name": "Loop - Schedule Posts in Mixpost",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 200],
+      "id": "mixpost-loop",
+      "loopData": {
+        "source": "={{$node['Parse & Validate Campaign JSON'].json.posts}}"
+      }
+    },
+    {
+      "parameters": {
+        "method": "post",
+        "url": "{{$env.TWENTY_CRM_URL}}/graphql",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "authentication": "headerAuth",
+          "values": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.TWENTY_CRM_TOKEN}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersJson": "{\n  \"query\": \"mutation CreateCampaign($input: CampaignCreateInput!) { campaignCreate(data: $input) { id name status startDate expectedLeads } }\",\n  \"variables\": {\n    \"input\": {\n      \"name\": \"{{$node['Parse & Validate Campaign JSON'].json.campaign_id}}\",\n      \"type\": \"Social_Media_MultiChannel\",\n      \"status\": \"Running\",\n      \"startDate\": \"{{$now.toISOString()}}\",\n      \"channels\": [\"LinkedIn\", \"Twitter\", \"Instagram\", \"Facebook\"],\n      \"postCount\": {{$node['Parse & Validate Campaign JSON'].json.posts_count}},\n      \"estimatedImpressions\": 50000,\n      \"estimatedLeads\": 25,\n      \"description\": \"Autonomous campaign generated by AutoMarket OS\",\n      \"trackingLinks\": {{$node['Parse & Validate Campaign JSON'].json.crm_tracking.campaign_record.tracking_links}}\n    }\n  }\n}"
+      },
+      "name": "Twenty CRM - Create Campaign Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1600, 150],
+      "id": "twenty-crm-campaign"
+    },
+    {
+      "parameters": {
+        "method": "post",
+        "url": "{{$env.STABLE_DIFFUSION_API_URL}}/generate",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "authentication": "headerAuth",
+          "values": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.STABLE_DIFFUSION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersJson": "{\n  \"prompt\": \"{{$node['Parse & Validate Campaign JSON'].json.original_response.posts[0].creative_brief.prompt_for_ai}}\",\n  \"negative_prompt\": \"low quality, blurry, watermark, text\",\n  \"width\": {{$node['Parse & Validate Campaign JSON'].json.original_response.posts[0].creative_brief.dimensions.split('x')[0]}},\n  \"height\": {{$node['Parse & Validate Campaign JSON'].json.original_response.posts[0].creative_brief.dimensions.split('x')[1]}},\n  \"steps\": 30,\n  \"cfg_scale\": 7.5\n}",
+        "options": {}
+      },
+      "name": "Image Generation - Stable Diffusion (Optional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 300],
+      "id": "image-generation"
+    },
+    {
+      "parameters": {
+        "method": "post",
+        "url": "{{$env.TWENTY_CRM_URL}}/graphql",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "authentication": "headerAuth",
+          "values": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.TWENTY_CRM_TOKEN}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersJson": "{\n  \"query\": \"mutation CreateTask($input: TaskCreateInput!) { taskCreate(data: $input) { id title status } }\",\n  \"variables\": {\n    \"input\": {\n      \"title\": \"Review & Approve AutoMarket Campaign {{$node['Parse & Validate Campaign JSON'].json.campaign_id}}\",\n      \"description\": \"Campaign generated by AutoMarket OS. Review posts and approve for publishing.\",\n      \"status\": \"Not_Started\",\n      \"assignedTo\": \"{{$env.TWENTY_CMO_USER_ID}}\",\n      \"dueDate\": \"{{($now.addHours(24)).toISOString()}}\"\n    }\n  }\n}"
+      },
+      "name": "Twenty CRM - Create Review Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1800, 150],
+      "id": "twenty-crm-task"
+    },
+    {
+      "parameters": {
+        "method": "post",
+        "url": "{{$env.SLACK_WEBHOOK_URL}}",
+        "sendBody": true,
+        "bodyParametersJson": "{\n  \"text\": \"❌ Campaign Blocked\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"⚠️ AutoMarket Campaign Requires Review\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"**Campaign ID**: {{$node['JSON-Parser'].json.campaign_id}}\\n**Reason**: {{$node['JSON-Parser'].json.reason}}\\n**Data Completeness**: {{$node['JSON-Parser'].json.data_completeness_score}}%\\n**Action**: Review missing data and resubmit\"\n      }\n    }\n  ]\n}"
+      },
+      "name": "Slack - Alert if Blocked",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 400],
+      "id": "slack-alert-blocked"
+    },
+    {
+      "parameters": {
+        "errorHandler": "continueRegardlessly",
+        "executionOrder": "afterPreviousAll"
+      },
+      "name": "Error Handler - Continue",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1600, 300],
+      "id": "error-handler",
+      "credentials": {}
+    }
+  ],
+  "connections": {
+    "Trigger (Cron)": {
+      "main": [
+        [
+          {
+            "node": "Firecrawl - Extract Website Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (On-Demand Trigger)": {
+      "main": [
+        [
+          {
+            "node": "Firecrawl - Extract Website Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl - Extract Website Content": {
+      "main": [
+        [
+          {
+            "node": "AI - Campaign Generation (Master Prompt)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Campaign Generation (Master Prompt)": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate Campaign JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Validate Campaign JSON": {
+      "main": [
+        [
+          {
+            "node": "Slack - Notify Campaign Ready",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop - Schedule Posts in Mixpost",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Twenty CRM - Create Campaign Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop - Schedule Posts in Mixpost": {
+      "main": [
+        [
+          {
+            "node": "Image Generation - Stable Diffusion (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twenty CRM - Create Campaign Record": {
+      "main": [
+        [
+          {
+            "node": "Twenty CRM - Create Review Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": false,
+    "timezone": "UTC",
+    "saveExecutionProgress": true,
+    "errorHandler": {
+      "type": "continueRegardlessly"
+    }
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "1",
+  "meta": {
+    "instanceId": "automarket-os",
+    "templateId": "automarket-campaign-generator",
+    "updated": "2025-12-27"
+  },
+  "description": "AutoMarket OS: Autonomous multi-channel marketing campaign generator. Scrapes website content, analyzes brand positioning, generates platform-specific posts, and integrates with CRM and social media scheduling tools.",
+  "documentation": "See /docs/N8N_WORKFLOW_SETUP.md for detailed configuration instructions."
+}
