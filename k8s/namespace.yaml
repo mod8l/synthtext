@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+  labels:
+    app: synthtext
+    environment: development
+---
+# Optional: Create staging namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: synthtext-staging
+  labels:
+    app: synthtext
+    environment: staging
+---
+# Optional: Create production namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: synthtext-prod
+  labels:
+    app: synthtext
+    environment: production
+  annotations:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
