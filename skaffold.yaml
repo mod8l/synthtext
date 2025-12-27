@@ -1,0 +1,138 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: synthtext-automarket
+
+# Project-specific settings
+projectId: synthtext-automarket
+
+# Build configuration
+build:
+  artifacts:
+    - image: synthtext-n8n
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*"
+            dest: /app/src
+
+# Deploy configuration
+deploy:
+  kubectl:
+    defaultNamespace: default
+
+# Profiles for different environments
+profiles:
+  # Local development with live reload
+  - name: dev
+    activation:
+      - command: dev
+    build:
+      artifacts:
+        - image: synthtext-n8n
+          docker:
+            dockerfile: Dockerfile
+            target: development
+          sync:
+            manual:
+              - src: "src/**/*"
+                dest: /app/src
+    deploy:
+      kubectl:
+        defaultNamespace: default
+        manifests:
+          - k8s/namespace.yaml
+          - k8s/postgres-pvc.yaml
+          - k8s/postgres-secret.yaml
+          - k8s/postgres-deployment.yaml
+          - k8s/postgres-service.yaml
+          - k8s/n8n-pvc.yaml
+          - k8s/n8n-configmap.yaml
+          - k8s/n8n-secret.yaml
+          - k8s/n8n-rbac.yaml
+          - k8s/n8n-deployment.yaml
+          - k8s/n8n-service.yaml
+          - k8s/n8n-ingress.yaml
+
+  # Staging environment
+  - name: staging
+    activation:
+      - command: build
+    build:
+      artifacts:
+        - image: synthtext-n8n
+          docker:
+            dockerfile: Dockerfile
+            target: production
+    deploy:
+      kubectl:
+        defaultNamespace: synthtext-staging
+        manifests:
+          - k8s/namespace.yaml
+          - k8s/postgres-pvc.yaml
+          - k8s/postgres-secret.yaml
+          - k8s/postgres-deployment.yaml
+          - k8s/postgres-service.yaml
+          - k8s/n8n-pvc.yaml
+          - k8s/n8n-configmap.yaml
+          - k8s/n8n-secret.yaml
+          - k8s/n8n-rbac.yaml
+          - k8s/n8n-deployment.yaml
+          - k8s/n8n-service.yaml
+          - k8s/n8n-ingress.yaml
+
+  # Production environment
+  - name: prod
+    build:
+      artifacts:
+        - image: synthtext-n8n
+          docker:
+            dockerfile: Dockerfile
+            target: production
+    deploy:
+      kubectl:
+        defaultNamespace: synthtext-prod
+        manifests:
+          - k8s/namespace.yaml
+          - k8s/postgres-pvc.yaml
+          - k8s/postgres-secret.yaml
+          - k8s/postgres-deployment.yaml
+          - k8s/postgres-service.yaml
+          - k8s/n8n-pvc.yaml
+          - k8s/n8n-configmap.yaml
+          - k8s/n8n-secret.yaml
+          - k8s/n8n-rbac.yaml
+          - k8s/n8n-deployment.yaml
+          - k8s/n8n-service.yaml
+          - k8s/n8n-ingress.yaml
+
+# Portforward for local development
+portForward:
+  - resourceType: deployment
+    resourceName: n8n
+    port: 5678
+    localPort: 5678
+  - resourceType: service
+    resourceName: postgres
+    port: 5432
+    localPort: 5432
+
+# Local cluster settings for minikube/Docker Desktop
+# Uncomment for local development
+# local:
+#   useDockerForBuild: true
+#   push: false
+
+# Image build settings
+build:
+  # Use Docker for building (change to buildpacks, bazel, etc. as needed)
+  artifacts:
+    - image: synthtext-n8n
+      docker:
+        dockerfile: Dockerfile
+      # Sync source code for faster dev reload
+      sync:
+        manual:
+          - src: "src/**/*"
+            dest: /app/src

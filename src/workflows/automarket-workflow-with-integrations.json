@@ -1,0 +1,334 @@
+{
+  "name": "AutoMarket Campaign Generator - Full Stack",
+  "description": "Complete workflow with Firecrawl, LLM, Database, Mixpost, and CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": "everyHour"
+      },
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "id": "cron-trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "automarket/webhook",
+        "responseMode": "responseNode",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "values": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.WEBHOOK_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "id": "webhook-trigger"
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "triggerBehavior": "all"
+      },
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [450, 175],
+      "id": "merge-triggers"
+    },
+    {
+      "parameters": {
+        "url": "https://api.firecrawl.dev/v0/scrape",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.FIRECRAWL_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUiExpression": "raw",
+        "body": {
+          "json": {
+            "url": "={{$json.website_url || 'https://example.com'}}",
+            "formats": ["markdown"],
+            "onlyMainContent": true,
+            "timeout": 15000
+          }
+        }
+      },
+      "name": "Firecrawl Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 175],
+      "id": "firecrawl-scraper"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = items[0].json;\nif (!response.success) throw new Error(`Firecrawl error: ${response.error}`);\nconst masterPrompt = `You are an expert CMO specializing in multi-channel social media strategy.\n\nYour task is to generate unique, platform-optimized social media posts.\n\n## Guidelines:\n1. Extract key value propositions from content\n2. Create authentic, data-driven content (no hallucinations)\n3. Optimize for each platform's characteristics\n4. Maintain consistent brand voice\n\n## Platform Requirements:\n- LinkedIn (3000 chars): Professional, data-driven\n- Twitter (280 chars): Concise, viral hooks\n- Instagram (2200 chars): Visual storytelling\n- Facebook: Community building\n\n## Validation Rules:\n✗ Banned: \"in today's fast-paced world\", \"game-changer\", \"synergy\"\n✓ All facts from provided content\n✓ No exaggerations\n\n## Output:\nReturn ONLY valid JSON:\n{\n  \"brand_analysis\": {\n    \"title\": \"Company name\",\n    \"key_usps\": [],\n    \"target_audience\": \"\",\n    \"brand_voice\": \"\"\n  },\n  \"posts\": {\n    \"linkedin\": \"Post content\",\n    \"twitter\": \"Tweet\",\n    \"instagram\": \"Post\",\n    \"facebook\": \"Post\"\n  }\n}`;\n\nreturn {\n  system_prompt: masterPrompt,\n  website_content: response.data.markdown,\n  brand_title: response.data.metadata?.title,\n  source_url: response.data.metadata?.sourceURL || items[0].json.url,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Prepare Prompt",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 175],
+      "id": "prepare-prompt"
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.CLAUDE_API_KEY || $env.OPENAI_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUiExpression": "raw",
+        "body": {
+          "json": {
+            "model": "={{$env.AI_MODEL || 'claude-opus-4-5-20251101'}}",
+            "max_tokens": 4096,
+            "system": "={{$json.system_prompt}}",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Generate marketing posts:\n\n{{$json.website_content}}"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Call LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 175],
+      "id": "call-llm"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = items[0].json;\nlet content = '';\nif (response.content?.[0]) content = response.content[0].text;\nelse if (response.choices?.[0]) content = response.choices[0].message.content;\n\nconst jsonMatch = content.match(/```(?:json)?\\s*([\\s\\S]*?)```|({[\\s\\S]*})/);\nlet jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[2]) : content;\nconst posts = JSON.parse(jsonStr);\n\nreturn {\n  posts: posts.posts || posts,\n  brand_analysis: posts.brand_analysis || {},\n  raw_response: content,\n  parse_success: true\n};"
+      },
+      "name": "Parse LLM",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 175],
+      "id": "parse-llm"
+    },
+    {
+      "parameters": {
+        "jsCode": "const posts = items[0].json.posts || {};\nconst banList = [\"in today's fast-paced world\", \"game-changer\", \"synergy\", \"leverage\"];\nconst errors = [];\nconst warnings = [];\n\nconst platforms = ['linkedin', 'twitter', 'instagram', 'facebook'];\nconst limits = {linkedin: 3000, twitter: 280, instagram: 2200, facebook: 63206};\n\nplatforms.forEach(p => {\n  const post = posts[p] || '';\n  if (!post) errors.push(`${p}: Missing`);\n  const lowerPost = post.toLowerCase();\n  banList.forEach(phrase => {\n    if (lowerPost.includes(phrase)) errors.push(`${p}: Banned phrase`);\n  });\n  if (post.length > limits[p]) warnings.push(`${p}: Too long`);\n  if (post.length < 20) errors.push(`${p}: Too short`);\n});\n\nconst validCount = platforms.filter(p => posts[p] && posts[p].length > 20).length;\nconst score = Math.round((validCount / platforms.length) * 100);\n\nreturn {\n  posts: posts,\n  is_valid: errors.length === 0,\n  completeness_score: score,\n  errors: errors,\n  warnings: warnings,\n  can_publish: score >= 80 && errors.length === 0\n};"
+      },
+      "name": "Validate Posts",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 175],
+      "id": "validate-posts"
+    },
+    {
+      "parameters": {
+        "credentials": {
+          "nodeCredentialType": "postgres",
+          "nodeCredentialTypeDisplayName": "Postgres"
+        },
+        "query": "INSERT INTO automarket.campaigns (website_url, brand_title, completeness_score, is_valid, validation_errors, validation_warnings, status) VALUES ('={{$json.source_url}}', '={{$json.brand_analysis?.title}}', {{$json.completeness_score}}, {{$json.is_valid}}, '{{$json.errors | json}}', '{{$json.warnings | json}}', '{{$json.is_valid ? \"validated\" : \"review_needed\"}}') RETURNING id, created_at;"
+      },
+      "name": "Database Insert",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1650, 100],
+      "id": "database-insert"
+    },
+    {
+      "parameters": {
+        "url": "https://api.mixpost.app/v1/posts",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.MIXPOST_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUiExpression": "raw",
+        "body": {
+          "json": {
+            "workspace_id": "={{$env.MIXPOST_WORKSPACE_ID}}",
+            "posts": [
+              {
+                "content": "={{$json.posts.linkedin}}",
+                "accounts": ["={{$env.MIXPOST_LINKEDIN_ACCOUNT_ID}}"],
+                "publish_now": false,
+                "scheduled_at": "={{$now.add(1, 'day').toISOString()}}"
+              },
+              {
+                "content": "={{$json.posts.twitter}}",
+                "accounts": ["={{$env.MIXPOST_TWITTER_ACCOUNT_ID}}"],
+                "publish_now": false,
+                "scheduled_at": "={{$now.add(1, 'day').toISOString()}}"
+              },
+              {
+                "content": "={{$json.posts.instagram}}",
+                "accounts": ["={{$env.MIXPOST_INSTAGRAM_ACCOUNT_ID}}"],
+                "publish_now": false,
+                "scheduled_at": "={{$now.add(1, 'day').toISOString()}}"
+              },
+              {
+                "content": "={{$json.posts.facebook}}",
+                "accounts": ["={{$env.MIXPOST_FACEBOOK_ACCOUNT_ID}}"],
+                "publish_now": false,
+                "scheduled_at": "={{$now.add(1, 'day').toISOString()}}"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Mixpost Scheduler",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 250],
+      "id": "mixpost-scheduler"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.TWENTY_CRM_URL}}/api/graphql",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.TWENTY_CRM_TOKEN}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUiExpression": "raw",
+        "body": {
+          "json": {
+            "query": "mutation CreateCampaign($input: CreateCampaignInput!) { createCampaign(input: $input) { id name } }",
+            "variables": {
+              "input": {
+                "name": "AutoMarket: {{$json.brand_analysis?.title}} - {{$now.format('YYYY-MM-DD')}}",
+                "description": "Auto-generated social campaign",
+                "status": "{{$json.is_valid ? 'active' : 'draft'}}",
+                "workspace_id": "={{$env.TWENTY_CRM_WORKSPACE_ID}}"
+              }
+            }
+          }
+        }
+      },
+      "name": "CRM Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 400],
+      "id": "crm-campaign"
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation",
+        "text": "🚀 Campaign Generated",
+        "attachments": [
+          {
+            "color": "={{$json.is_valid ? '#36a64f' : '#ff0000'}}",
+            "title": "{{$json.brand_analysis?.title || 'Campaign'}}",
+            "text": "Score: {{$json.completeness_score}}% | DB: {{$json.campaign_id}} | Mixpost: scheduled | CRM: created"
+          }
+        ]
+      },
+      "name": "Slack Notify",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1850, 250],
+      "id": "slack-notify"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonData": "{}",
+        "responseMode": "responseNode"
+      },
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2050, 250],
+      "id": "response-node"
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [[{"node": "Merge Triggers", "type": "main", "index": 0}]]
+    },
+    "Webhook Trigger": {
+      "main": [[{"node": "Merge Triggers", "type": "main", "index": 1}]]
+    },
+    "Merge Triggers": {
+      "main": [[{"node": "Firecrawl Scraper", "type": "main", "index": 0}]]
+    },
+    "Firecrawl Scraper": {
+      "main": [[{"node": "Prepare Prompt", "type": "main", "index": 0}]]
+    },
+    "Prepare Prompt": {
+      "main": [[{"node": "Call LLM", "type": "main", "index": 0}]]
+    },
+    "Call LLM": {
+      "main": [[{"node": "Parse LLM", "type": "main", "index": 0}]]
+    },
+    "Parse LLM": {
+      "main": [[{"node": "Validate Posts", "type": "main", "index": 0}]]
+    },
+    "Validate Posts": {
+      "main": [
+        [
+          {"node": "Database Insert", "type": "main", "index": 0},
+          {"node": "Mixpost Scheduler", "type": "main", "index": 0},
+          {"node": "CRM Campaign", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Database Insert": {
+      "main": [[{"node": "Slack Notify", "type": "main", "index": 0}]]
+    },
+    "Mixpost Scheduler": {
+      "main": [[{"node": "Slack Notify", "type": "main", "index": 0}]]
+    },
+    "CRM Campaign": {
+      "main": [[{"node": "Slack Notify", "type": "main", "index": 0}]]
+    },
+    "Slack Notify": {
+      "main": [[{"node": "Response", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 3600,
+    "maxRetries": 3
+  }
+}

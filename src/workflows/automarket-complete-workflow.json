@@ -1,0 +1,308 @@
+{
+  "name": "AutoMarket Campaign Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": "everyHour"
+      },
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "id": "cron-trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "automarket/webhook",
+        "responseMode": "responseNode",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "values": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.WEBHOOK_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "id": "webhook-trigger"
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "triggerBehavior": "all"
+      },
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [450, 175],
+      "id": "merge-triggers"
+    },
+    {
+      "parameters": {
+        "url": "https://api.firecrawl.dev/v0/scrape",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.FIRECRAWL_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUiExpression": "raw",
+        "body": {
+          "json": {
+            "url": "={{$json.website_url || 'https://example.com'}}",
+            "formats": ["markdown"],
+            "onlyMainContent": true,
+            "timeout": 15000
+          }
+        }
+      },
+      "name": "Firecrawl Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 175],
+      "id": "firecrawl-scraper"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Firecrawl response and prepare prompt\nconst response = items[0].json;\n\nif (!response.success) {\n  throw new Error(`Firecrawl error: ${response.error}`);\n}\n\nconst markdown = response.data.markdown || '';\nconst metadata = response.data.metadata || {};\n\n// Master prompt for CMO persona\nconst masterPrompt = `You are an expert Chief Marketing Officer specializing in multi-channel social media strategy.\n\nYour task is to analyze the provided website content and generate unique, platform-optimized social media posts.\n\n## Guidelines:\n1. Extract key value propositions and USPs from the content\n2. Identify the target audience and their pain points\n3. Create authentic, data-driven content (no hallucinations)\n4. Optimize for each platform's unique characteristics and constraints\n5. Include platform-specific CTAs and engagement tactics\n6. Maintain consistent brand voice across all platforms\n\n## Platform Requirements:\n\n### LinkedIn (Professional, 3000 char max)\n- Focus on industry insights and thought leadership\n- Highlight expertise and credentials\n- Use data and statistics where available\n- Include relevant hashtags\n- CTA: Learning opportunity, connection, article share\n\n### Twitter/X (280 char max)\n- Hook with strong opening statement\n- Use concise, punchy language\n- Include trending hashtags if relevant\n- CTA: Link click, engagement, follow\n\n### Instagram (2200 char max)\n- Visual storytelling approach\n- Use emojis appropriately\n- Behind-the-scenes or lifestyle angle\n- Strong call-to-action\n- CTA: Website visit, DM, tag friend\n\n### Facebook (Community-focused, no strict limit)\n- Conversational tone\n- Tell a story\n- Ask engaging questions\n- Strong CTA with clear next step\n- Include relevant hashtags\n\n## Validation Rules:\n✗ Banned phrases: \"in today's fast-paced world\", \"game-changer\", \"synergy\", \"paradigm shift\", \"leverage\"\n✓ All facts must come from the provided content\n✓ Brand voice must be consistent\n✓ No exaggerations or invented features\n✓ Include specific, measurable benefits where possible\n\n## Output Format:\nReturn ONLY a valid JSON object (no markdown, no explanation) with this structure:\n{\n  \"brand_analysis\": {\n    \"title\": \"Company name from content\",\n    \"key_usps\": [\"USP 1\", \"USP 2\", \"USP 3\"],\n    \"target_audience\": \"Description of ideal customer\",\n    \"brand_voice\": \"Tone and personality\"\n  },\n  \"posts\": {\n    \"linkedin\": \"Full LinkedIn post content\",\n    \"twitter\": \"Full Twitter/X post content\",\n    \"instagram\": \"Full Instagram post content\",\n    \"facebook\": \"Full Facebook post content\"\n  },\n  \"metadata\": {\n    \"generated_at\": \"ISO timestamp\",\n    \"source_url\": \"Original website URL\",\n    \"content_type\": \"marketing_campaign\"\n  }\n}`;\n\nreturn {\n  system_prompt: masterPrompt,\n  website_content: markdown,\n  brand_title: metadata.title || 'Unknown Company',\n  brand_description: metadata.description || '',\n  source_url: metadata.sourceURL || $json.website_url,\n  language: metadata.language || 'en',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Prepare Prompt",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 175],
+      "id": "prepare-prompt"
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.CLAUDE_API_KEY || $env.OPENAI_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUiExpression": "raw",
+        "body": {
+          "json": {
+            "model": "={{$env.AI_MODEL || 'claude-opus-4-5-20251101'}}",
+            "max_tokens": 4096,
+            "system": "={{$json.system_prompt}}",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Generate marketing posts from this website content:\n\n{{$json.website_content}}\n\nReturn ONLY a valid JSON object with the structure specified in the system prompt."
+              }
+            ]
+          }
+        }
+      },
+      "name": "Call LLM (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 175],
+      "id": "call-llm"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse LLM response and extract JSON\nconst response = items[0].json;\nlet content = '';\n\ntry {\n  // Handle Claude response format\n  if (response.content && Array.isArray(response.content) && response.content[0]) {\n    content = response.content[0].text;\n  } \n  // Handle OpenAI response format\n  else if (response.choices && Array.isArray(response.choices) && response.choices[0]) {\n    content = response.choices[0].message.content;\n  } else {\n    throw new Error('Unexpected LLM response format');\n  }\n\n  // Extract JSON from response (handle markdown code blocks)\n  const jsonRegex = /```(?:json)?\\s*([\\s\\S]*?)```|({[\\s\\S]*})/;\n  const match = content.match(jsonRegex);\n  \n  let jsonStr = match ? (match[1] || match[2]) : content;\n  const posts = JSON.parse(jsonStr);\n\n  return {\n    posts: posts.posts || posts,\n    brand_analysis: posts.brand_analysis || {},\n    raw_response: content,\n    parse_success: true\n  };\n} catch (error) {\n  // If parsing fails, try to extract posts manually\n  throw new Error(`Failed to parse LLM response: ${error.message}`);\n}"
+      },
+      "name": "Parse LLM Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 175],
+      "id": "parse-llm"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate posts against guardrails\nconst posts = items[0].json.posts || {};\nconst banList = [\n  \"in today's fast-paced world\",\n  \"game-changer\",\n  \"synergy\",\n  \"leverage\",\n  \"paradigm shift\",\n  \"think outside the box\",\n  \"move the needle\",\n  \"circle back\"\n];\n\nconst errors = [];\nconst warnings = [];\n\n// Validate each platform\nconst platforms = ['linkedin', 'twitter', 'instagram', 'facebook'];\nconst limits = {\n  linkedin: 3000,\n  twitter: 280,\n  instagram: 2200,\n  facebook: 63206\n};\n\nplatforms.forEach(platform => {\n  const post = posts[platform] || '';\n  \n  if (!post || post.trim().length === 0) {\n    errors.push(`${platform}: Missing post content`);\n    return;\n  }\n\n  // Check for banned phrases\n  const lowerPost = post.toLowerCase();\n  banList.forEach(phrase => {\n    if (lowerPost.includes(phrase)) {\n      errors.push(`${platform}: Contains banned phrase: \"${phrase}\"`);\n    }\n  });\n\n  // Check character limits\n  if (post.length > limits[platform]) {\n    warnings.push(`${platform}: Exceeds length (${post.length}/${limits[platform]} chars)`);\n  }\n\n  // Check minimum length\n  if (post.length < 20) {\n    errors.push(`${platform}: Too short (${post.length} chars)`);\n  }\n\n  // Check for common hallucinations (no URLs without source, etc.)\n  if (post.includes('Visit http') && !items[1].json.source_url) {\n    warnings.push(`${platform}: Contains URL reference without clear source`);\n  }\n});\n\nconst validPostCount = platforms.filter(p => posts[p] && posts[p].trim().length > 0).length;\nconst completenessScore = Math.round((validPostCount / platforms.length) * 100);\n\nreturn {\n  posts: posts,\n  is_valid: errors.length === 0,\n  completeness_score: completenessScore,\n  errors: errors,\n  warnings: warnings,\n  can_publish: completenessScore >= 80 && errors.length === 0,\n  validation_timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate Posts",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 175],
+      "id": "validate-posts"
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation",
+        "text": "🚀 AutoMarket Campaign Generated",
+        "attachments": [
+          {
+            "color": "={{$json.is_valid ? '#36a64f' : '#ff0000'}}",
+            "title": "Campaign Summary",
+            "text": "={{$json.brand_analysis?.title || 'Marketing Campaign'}}\nCompleteness: {{$json.completeness_score}}%\nStatus: {{$json.can_publish ? '✅ Ready to Publish' : '⚠️ Needs Review'}}",
+            "mrkdwn_in": ["text"]
+          },
+          {
+            "title": "LinkedIn Post",
+            "text": "={{$json.posts.linkedin || 'N/A'}}",
+            "mrkdwn_in": ["text"]
+          },
+          {
+            "title": "Twitter Post",
+            "text": "={{$json.posts.twitter || 'N/A'}}",
+            "mrkdwn_in": ["text"]
+          }
+        ]
+      },
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1650, 400],
+      "id": "slack-notification"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonData": "{}",
+        "responseMode": "responseNode"
+      },
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1850, 175],
+      "id": "response-node"
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Firecrawl Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl Scraper": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call LLM (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LLM (Claude)": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Validate Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Posts": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "nodeTypes": {
+    "n8n-nodes-base.cron": "Cron",
+    "n8n-nodes-base.webhook": "Webhook",
+    "n8n-nodes-base.merge": "Merge",
+    "n8n-nodes-base.httpRequest": "HTTP Request",
+    "n8n-nodes-base.function": "Function",
+    "n8n-nodes-base.slack": "Slack",
+    "n8n-nodes-base.respondToWebhook": "Respond to Webhook"
+  },
+  "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 3600,
+    "maxRetries": 3
+  }
+}

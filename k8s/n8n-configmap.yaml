@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n8n-config
+  namespace: default
+  labels:
+    app: n8n
+data:
+  # n8n Configuration
+  N8N_HOST: http://n8n:5678
+  N8N_PORT: "5678"
+  N8N_PROTOCOL: http
+  NODE_ENV: production
+  WEBHOOK_TUNNEL_URL: http://n8n:5678/
+
+  # PostgreSQL Database Configuration
+  DB_TYPE: postgresdb
+  DB_POSTGRESDB_HOST: postgres
+  DB_POSTGRESDB_PORT: "5432"
+  DB_POSTGRESDB_DATABASE: n8n
+  DB_POSTGRESDB_USER: n8n
+  DB_POSTGRESDB_SSL_ENABLED: "false"
+
+  # Execution configuration
+  EXECUTIONS_DATA_PRUNE: "true"
+  EXECUTIONS_DATA_MAX_AGE: "259200"  # 3 days in seconds
+  EXECUTIONS_TIMEOUT: "3600"  # 1 hour in seconds
+
+  # n8n Settings
+  N8N_DIAGNOSTICS_ENABLED: "false"
+  N8N_TEMPLATES_ENABLED: "true"
+  N8N_USER_MANAGEMENT_DISABLED: "false"
+
+  # Logging
+  LOG_LEVEL: info
+
+  # Security
+  GENERIC_OAUTH_ENABLED: "false"
+  LDAP_ENABLED: "false"
+
+  # Email notifications (optional - configure if needed)
+  # SMTP_HOST: smtp.example.com
+  # SMTP_PORT: "587"
+  # SMTP_USER: your_email@example.com
+  # SMTP_SENDER_EMAIL: noreply@example.com
+
+  # AutoMarket OS specific settings
+  CAMPAIGN_DEFAULT_TIMEZONE: "UTC"
+  CAMPAIGN_REVIEW_REQUIRED: "true"
+  CAMPAIGN_DATA_COMPLETENESS_THRESHOLD: "80"
+  LOG_LEVEL_N8N_METRICS: "error"
