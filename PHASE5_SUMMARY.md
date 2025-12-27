@@ -241,7 +241,7 @@ Triggers → Firecrawl → LLM → Validate → [Parallel execution]
 ## Files Delivered
 
 ```
-/synthtext/
+/synthext/
 ├── docs/
 │   ├── PHASE5_API_INTEGRATIONS.md         (1000+ lines) ⭐
 │   └── PHASE5_QUICKSTART.md               (500+ lines) ⭐

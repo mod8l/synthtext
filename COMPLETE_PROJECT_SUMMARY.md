@@ -379,7 +379,7 @@ Cost Per Post: $0.06-0.08
 ## Documentation Structure
 
 ```
-/synthtext/
+/synthext/
 ├── IMPLEMENTATION_PHASES.md         (8-phase roadmap)
 ├── PROJECT_STATUS.md                (Overall progress)
 ├── PHASE4_SUMMARY.md                (Phase 4 details)

@@ -190,21 +190,21 @@ open http://localhost:5678
 kubectl config use-context staging-cluster
 
 # 2. Create staging namespace
-kubectl create namespace synthtext-staging
+kubectl create namespace synthext-staging
 
 # 3. Update secrets for staging
-kubectl apply -f k8s/postgres-secret.yaml -n synthtext-staging
-kubectl apply -f k8s/n8n-secret.yaml -n synthtext-staging
+kubectl apply -f k8s/postgres-secret.yaml -n synthext-staging
+kubectl apply -f k8s/n8n-secret.yaml -n synthext-staging
 
 # 4. Deploy
-skaffold run --profile=staging -n synthtext-staging
+skaffold run --profile=staging -n synthext-staging
 
 # 5. Configure Ingress with TLS
 # Update k8s/n8n-ingress.yaml with your domain
-kubectl apply -f k8s/n8n-ingress.yaml -n synthtext-staging
+kubectl apply -f k8s/n8n-ingress.yaml -n synthext-staging
 
 # 6. Get external IP
-kubectl get svc n8n -n synthtext-staging
+kubectl get svc n8n -n synthext-staging
 ```
 
 ### Scenario 3: Production Deployment
@@ -214,23 +214,23 @@ kubectl get svc n8n -n synthtext-staging
 kubectl config use-context prod-cluster
 
 # 2. Create production namespace with security policies
-kubectl create namespace synthtext-prod
-kubectl label namespace synthtext-prod pod-security.kubernetes.io/enforce=restricted
+kubectl create namespace synthext-prod
+kubectl label namespace synthext-prod pod-security.kubernetes.io/enforce=restricted
 
 # 3. Use external secrets (Vault, sealed-secrets, etc.)
 # Example with sealed-secrets:
 kubeseal -f k8s/n8n-secret.yaml \
   --scope=namespace \
-  --namespace=synthtext-prod > k8s/n8n-secret-sealed.yaml
+  --namespace=synthext-prod > k8s/n8n-secret-sealed.yaml
 
 # 4. Deploy with Skaffold
-skaffold run --profile=prod -n synthtext-prod
+skaffold run --profile=prod -n synthext-prod
 
 # 5. Set up monitoring (Prometheus, Datadog, New Relic)
 # Add servicemonitor.yaml, datadog-annotations, etc.
 
 # 6. Verify deployment
-kubectl get all -n synthtext-prod
+kubectl get all -n synthext-prod
 ```
 
 ## Scaling

@@ -39,7 +39,7 @@ spec:
 
       containers:
         - name: n8n
-          image: synthtext-n8n:latest
+          image: synthext-n8n:latest
           imagePullPolicy: IfNotPresent
 
           ports:

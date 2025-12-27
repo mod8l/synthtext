@@ -998,19 +998,19 @@ echo "✓ Disaster recovery test completed"
 ```bash
 # 1. Build and test
 npm run test -- --coverage
-docker build -t synthtext-n8n:v1.2.0 .
+docker build -t synthext-n8n:v1.2.0 .
 
 # 2. Push to registry
-docker push your-registry/synthtext-n8n:v1.2.0
+docker push your-registry/synthext-n8n:v1.2.0
 
 # 3. Deploy to staging
-kubectl set image deployment/n8n n8n=synthtext-n8n:v1.2.0 -n staging
+kubectl set image deployment/n8n n8n=synthext-n8n:v1.2.0 -n staging
 
 # 4. Run smoke tests
 bash scripts/run-tests.sh smoke -n staging
 
 # 5. If successful, deploy to prod
-kubectl set image deployment/n8n n8n=synthtext-n8n:v1.2.0 -n production
+kubectl set image deployment/n8n n8n=synthext-n8n:v1.2.0 -n production
 
 # 6. Monitor for 30 minutes
 kubectl logs -f deployment/n8n -n production

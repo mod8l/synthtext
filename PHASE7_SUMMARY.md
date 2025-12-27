@@ -391,7 +391,7 @@ Expected performance after optimization:
 ## Files in Phase 7
 
 ```
-/synthtext/
+/synthext/
 ├── docs/
 │   └── PHASE7_TESTING_FRAMEWORK.md      (1200+ lines)
 │

@@ -333,7 +333,7 @@ curl -X POST https://api.firecrawl.dev/v0/scrape \
 ## 🔗 Documentation Structure
 
 ```
-/synthtext/
+/synthext/
 ├── docs/
 │   ├── PHASE1_SKAFFOLD_SETUP.md      → k8s/README.md, SKAFFOLD_QUICKSTART.md
 │   ├── PHASE2_LLM_SETUP.md           → LLM provider guides
