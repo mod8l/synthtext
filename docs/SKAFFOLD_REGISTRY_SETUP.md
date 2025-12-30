@@ -21,7 +21,7 @@ For **Docker Desktop Kubernetes** or **Minikube** with local image storage:
 
 ```bash
 # Edit skaffold.yaml
-cd /home/user/synthtext
+cd /home/user/synthext
 
 # Uncomment the local configuration:
 # local:
@@ -52,7 +52,7 @@ This builds locally and deploys without pushing to a remote registry.
    ```yaml
    build:
      artifacts:
-       - image: synthtext-n8n
+       - image: synthext-n8n
          docker:
            dockerfile: Dockerfile
 
@@ -69,7 +69,7 @@ This builds locally and deploys without pushing to a remote registry.
    ```yaml
    build:
      artifacts:
-       - image: your-docker-username/synthtext-n8n
+       - image: your-docker-username/synthext-n8n
          docker:
            dockerfile: Dockerfile
    ```
@@ -81,7 +81,7 @@ This builds locally and deploys without pushing to a remote registry.
 1. **Create ECR Repository**
    ```bash
    aws ecr create-repository \
-     --repository-name synthtext-n8n \
+     --repository-name synthext-n8n \
      --region us-east-1
    ```
 
@@ -96,7 +96,7 @@ This builds locally and deploys without pushing to a remote registry.
    ```yaml
    build:
      artifacts:
-       - image: 123456789.dkr.ecr.us-east-1.amazonaws.com/synthtext-n8n
+       - image: 123456789.dkr.ecr.us-east-1.amazonaws.com/synthext-n8n
          docker:
            dockerfile: Dockerfile
    ```
@@ -123,15 +123,15 @@ This builds locally and deploys without pushing to a remote registry.
 
 3. **Build & Push**
    ```bash
-   docker build -t gcr.io/MY_PROJECT_ID/synthtext-n8n:latest .
-   docker push gcr.io/MY_PROJECT_ID/synthtext-n8n:latest
+   docker build -t gcr.io/MY_PROJECT_ID/synthext-n8n:latest .
+   docker push gcr.io/MY_PROJECT_ID/synthext-n8n:latest
    ```
 
 4. **Update skaffold.yaml**
    ```yaml
    build:
      artifacts:
-       - image: gcr.io/MY_PROJECT_ID/synthtext-n8n
+       - image: gcr.io/MY_PROJECT_ID/synthext-n8n
          docker:
            dockerfile: Dockerfile
    ```
@@ -153,15 +153,15 @@ This builds locally and deploys without pushing to a remote registry.
 
 3. **Build & Push**
    ```bash
-   docker build -t myregistry.azurecr.io/synthtext-n8n:latest .
-   docker push myregistry.azurecr.io/synthtext-n8n:latest
+   docker build -t myregistry.azurecr.io/synthext-n8n:latest .
+   docker push myregistry.azurecr.io/synthext-n8n:latest
    ```
 
 4. **Update skaffold.yaml**
    ```yaml
    build:
      artifacts:
-       - image: myregistry.azurecr.io/synthtext-n8n
+       - image: myregistry.azurecr.io/synthext-n8n
          docker:
            dockerfile: Dockerfile
    ```
@@ -195,7 +195,7 @@ spec:
         - name: regcred
       containers:
         - name: n8n
-          image: <your-registry>/synthtext-n8n:latest
+          image: <your-registry>/synthext-n8n:latest
 ```
 
 ## Skaffold Configuration Examples
@@ -207,11 +207,11 @@ spec:
 apiVersion: skaffold/v4beta6
 kind: Config
 metadata:
-  name: synthtext-automarket
+  name: synthext-automarket
 
 build:
   artifacts:
-    - image: synthtext-n8n
+    - image: synthext-n8n
       docker:
         dockerfile: Dockerfile
       sync:
@@ -240,12 +240,12 @@ profiles:
   - name: staging
     build:
       artifacts:
-        - image: your-docker-username/synthtext-n8n:staging
+        - image: your-docker-username/synthext-n8n:staging
           docker:
             dockerfile: Dockerfile
     deploy:
       kubectl:
-        defaultNamespace: synthtext-staging
+        defaultNamespace: synthext-staging
         manifests:
           - k8s/namespace.yaml
           - k8s/*.yaml
@@ -264,12 +264,12 @@ profiles:
   - name: prod
     build:
       artifacts:
-        - image: 123456789.dkr.ecr.us-east-1.amazonaws.com/synthtext-n8n:latest
+        - image: 123456789.dkr.ecr.us-east-1.amazonaws.com/synthext-n8n:latest
           docker:
             dockerfile: Dockerfile
     deploy:
       kubectl:
-        defaultNamespace: synthtext-prod
+        defaultNamespace: synthext-prod
         manifests:
           - k8s/namespace.yaml
           - k8s/*.yaml
@@ -291,17 +291,17 @@ skaffold run --profile=prod
 ### Semantic Versioning
 ```bash
 # Development (short SHA)
-docker tag synthtext-n8n:$(git rev-parse --short HEAD)
+docker tag synthext-n8n:$(git rev-parse --short HEAD)
 
 # Staging (version)
-docker tag synthtext-n8n:v1.0.0-staging
+docker tag synthext-n8n:v1.0.0-staging
 
 # Production (stable)
-docker tag synthtext-n8n:v1.0.0
-docker tag synthtext-n8n:latest
+docker tag synthext-n8n:v1.0.0
+docker tag synthext-n8n:latest
 
 # Rollback capability
-docker tag synthtext-n8n:v1.0.0-rollback
+docker tag synthext-n8n:v1.0.0-rollback
 ```
 
 ### Skaffold Tag Template
@@ -311,7 +311,7 @@ build:
     envTemplate:
       template: "{{ .IMAGE_NAME }}:{{ .KUBE_NAMESPACE }}-{{ .BUILD_ID }}"
   artifacts:
-    - image: synthtext-n8n
+    - image: synthext-n8n
       docker:
         dockerfile: Dockerfile
 ```
@@ -326,12 +326,12 @@ build:
    brew install aquasecurity/trivy/trivy
 
    # Scan image
-   trivy image synthtext-n8n:latest
+   trivy image synthext-n8n:latest
    ```
 
 2. **Scan with Docker Scout**
    ```bash
-   docker scout cves synthtext-n8n:latest
+   docker scout cves synthext-n8n:latest
    ```
 
 3. **Registry-Native Scanning**
@@ -345,7 +345,7 @@ build:
 
 ```bash
 # Check image exists in registry
-docker pull your-registry/synthtext-n8n:latest
+docker pull your-registry/synthext-n8n:latest
 
 # Check Kubernetes can access registry
 kubectl describe pod <pod-name>
@@ -376,7 +376,7 @@ kubectl create secret docker-registry regcred \
 skaffold debug --verbosity=debug
 
 # Check Dockerfile
-docker build -t synthtext-n8n:test .
+docker build -t synthext-n8n:test .
 
 # Check docker daemon
 docker ps
@@ -432,7 +432,7 @@ jobs:
       - name: Build and push
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: synthtext-n8n
+          ECR_REPOSITORY: synthext-n8n
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .

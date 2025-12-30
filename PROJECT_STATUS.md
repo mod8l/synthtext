@@ -120,7 +120,7 @@ Complete implementation of AutoMarket OS Phases 1-4, delivering a production-rea
 ## 📁 Project Structure
 
 ```
-/synthtext/
+/synthext/
 ├── 📄 IMPLEMENTATION_PHASES.md           (8-phase roadmap)
 ├── 📄 PHASE4_SUMMARY.md                  (Phase 4 details)
 ├── 📄 PROJECT_STATUS.md                  (This file)
@@ -166,7 +166,7 @@ minikube start --cpus 4 --memory 4096
 
 ### 2. Deploy Infrastructure
 ```bash
-cd /home/user/synthtext
+cd /home/user/synthext
 
 # Update API keys
 vi k8s/n8n-secret.yaml

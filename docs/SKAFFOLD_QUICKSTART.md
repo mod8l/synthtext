@@ -49,7 +49,7 @@ gcloud container clusters get-credentials my-cluster --zone us-central1-a
 ## 3. Clone/Navigate to Project
 
 ```bash
-cd /home/user/synthtext
+cd /home/user/synthext
 
 # Verify project structure
 ls -la
@@ -93,7 +93,7 @@ Deployments:
 Checking for deletions...
 Cleaning up...
 Building images...
-Building [synthtext-n8n]...
+Building [synthext-n8n]...
 ...
 ✓ Artifacts built successfully
 ✓ Kubernetes deployment completed
@@ -230,10 +230,10 @@ kubectl port-forward svc/postgres 5432:5432
 ```bash
 # Check Docker
 docker ps
-docker images | grep synthtext
+docker images | grep synthext
 
 # Manual build
-docker build -t synthtext-n8n:latest .
+docker build -t synthext-n8n:latest .
 
 # Check Dockerfile
 cat Dockerfile

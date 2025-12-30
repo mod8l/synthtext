@@ -3,25 +3,25 @@ kind: Namespace
 metadata:
   name: default
   labels:
-    app: synthtext
+    app: synthext
     environment: development
 ---
 # Optional: Create staging namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: synthtext-staging
+  name: synthext-staging
   labels:
-    app: synthtext
+    app: synthext
     environment: staging
 ---
 # Optional: Create production namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: synthtext-prod
+  name: synthext-prod
   labels:
-    app: synthtext
+    app: synthext
     environment: production
   annotations:
     pod-security.kubernetes.io/enforce: restricted

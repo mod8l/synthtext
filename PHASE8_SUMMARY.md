@@ -368,7 +368,7 @@ After Phase 8 deployment:
 
 ### Files Created:
 ```
-/synthtext/
+/synthext/
 ├── IMPLEMENTATION_PHASES.md
 ├── PROJECT_STATUS.md
 ├── PHASE4_SUMMARY.md

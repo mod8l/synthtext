@@ -265,7 +265,7 @@ Track in Twenty CRM:
 ## File Structure
 
 ```
-/synthtext/
+/synthext/
 ├── README.md (this file)
 ├── .env.example
 ├── src/
