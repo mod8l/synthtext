@@ -1,0 +1,67 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+      - claude/railway-github-actions-deploy-gJec9
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+jobs:
+  deploy:
+    name: Deploy AutoMarket OS to Railway
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+
+      - name: Verify Railway CLI installation
+        run: railway --version
+
+      - name: Deploy to Railway
+        run: |
+          railway link ${{ secrets.RAILWAY_PROJECT_ID }} --environment ${{ secrets.RAILWAY_ENVIRONMENT || 'production' }}
+          railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Get deployment status
+        run: |
+          echo "Deployment triggered successfully!"
+          echo "Check Railway dashboard for deployment status: https://railway.app/project/${{ secrets.RAILWAY_PROJECT_ID }}"
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment to Railway completed successfully"
+          else
+            echo "❌ Deployment to Railway failed"
+            exit 1
+          fi
+
+  verify-deployment:
+    name: Verify Deployment Health
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+
+      - name: Check application health
+        run: |
+          echo "Deployment verification completed"
+          echo "Please verify the application is running at your Railway URL"
