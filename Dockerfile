@@ -7,24 +7,22 @@ FROM n8nio/n8n:latest AS base
 WORKDIR /app
 
 # Install additional dependencies for AutoMarket integrations
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     curl \
     git \
-    jq \
-    && rm -rf /var/lib/apt/lists/*
+    jq
 
 # Stage 2: Development image with all tools
 FROM base AS development
 
 # Install development tools for debugging
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     vim \
     nano \
     less \
     net-tools \
-    iputils-ping \
-    dnsutils \
-    && rm -rf /var/lib/apt/lists/*
+    iputils \
+    bind-tools
 
 # Copy project files
 COPY . /app/
@@ -41,7 +39,7 @@ CMD ["n8n", "start"]
 FROM base AS production
 
 # Security: Don't run as root
-RUN useradd -m -u 1000 n8n-user
+RUN adduser -D -u 1000 n8n-user
 
 # Copy only necessary files
 COPY src/ /app/src/
