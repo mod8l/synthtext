@@ -1,28 +1,31 @@
 # Multi-stage build for n8n with AutoMarket OS customizations
 
 # Stage 1: Base image with dependencies
-FROM n8nio/n8n:latest AS base
+# Using debian variant because latest is distroless (no package manager)
+FROM n8nio/n8n:latest-debian AS base
 
 # Set working directory
 WORKDIR /app
 
 # Install additional dependencies for AutoMarket integrations
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     curl \
     git \
-    jq
+    jq \
+    && rm -rf /var/lib/apt/lists/*
 
 # Stage 2: Development image with all tools
 FROM base AS development
 
 # Install development tools for debugging
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     vim \
     nano \
     less \
     net-tools \
-    iputils \
-    bind-tools
+    iputils-ping \
+    dnsutils \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy project files
 COPY . /app/
@@ -39,7 +42,7 @@ CMD ["n8n", "start"]
 FROM base AS production
 
 # Security: Don't run as root
-RUN adduser -D -u 1000 n8n-user
+RUN useradd -m -u 1000 n8n-user
 
 # Copy only necessary files
 COPY src/ /app/src/
