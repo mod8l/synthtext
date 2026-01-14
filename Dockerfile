@@ -1,7 +1,7 @@
 # Multi-stage build for n8n with AutoMarket OS customizations
 
 # Stage 1: Base image with dependencies
-FROM n8n:latest as base
+FROM n8nio/n8n:latest AS base
 
 # Set working directory
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Stage 2: Development image with all tools
-FROM base as development
+FROM base AS development
 
 # Install development tools for debugging
 RUN apt-get update && apt-get install -y \
@@ -38,7 +38,7 @@ EXPOSE 5678
 CMD ["n8n", "start"]
 
 # Stage 3: Production image (optimized)
-FROM base as production
+FROM base AS production
 
 # Security: Don't run as root
 RUN useradd -m -u 1000 n8n-user
