@@ -10,8 +10,8 @@
     "startCommand": null,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
-    "healthcheckPath": "/healthz",
-    "healthcheckTimeout": 100
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 300
   },
   "environments": {
     "production": {
@@ -25,6 +25,7 @@
         "EXECUTIONS_MODE": "regular",
         "GENERIC_TIMEZONE": "UTC",
         "N8N_METRICS": "true",
+        "N8N_DIAGNOSTICS_ENABLED": "true",
         "N8N_LOG_LEVEL": "info"
       }
     },
@@ -39,6 +40,7 @@
         "EXECUTIONS_MODE": "regular",
         "GENERIC_TIMEZONE": "UTC",
         "N8N_METRICS": "true",
+        "N8N_DIAGNOSTICS_ENABLED": "true",
         "N8N_LOG_LEVEL": "debug"
       }
     }
