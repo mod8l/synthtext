@@ -10,8 +10,8 @@
     "startCommand": null,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
-    "healthcheckPath": "/",
-    "healthcheckTimeout": 300
+    "healthcheckPath": "/healthz",
+    "healthcheckTimeout": 600
   },
   "environments": {
     "production": {
@@ -25,8 +25,12 @@
         "EXECUTIONS_MODE": "regular",
         "GENERIC_TIMEZONE": "UTC",
         "N8N_METRICS": "true",
+        "N8N_METRICS_INCLUDE_API_ENDPOINTS": "true",
+        "N8N_METRICS_INCLUDE_DEFAULT_METRICS": "true",
         "N8N_DIAGNOSTICS_ENABLED": "true",
-        "N8N_LOG_LEVEL": "info"
+        "N8N_LOG_LEVEL": "info",
+        "DB_TYPE": "sqlite",
+        "N8N_USER_MANAGEMENT_DISABLED": "true"
       }
     },
     "staging": {
@@ -40,8 +44,12 @@
         "EXECUTIONS_MODE": "regular",
         "GENERIC_TIMEZONE": "UTC",
         "N8N_METRICS": "true",
+        "N8N_METRICS_INCLUDE_API_ENDPOINTS": "true",
+        "N8N_METRICS_INCLUDE_DEFAULT_METRICS": "true",
         "N8N_DIAGNOSTICS_ENABLED": "true",
-        "N8N_LOG_LEVEL": "debug"
+        "N8N_LOG_LEVEL": "debug",
+        "DB_TYPE": "sqlite",
+        "N8N_USER_MANAGEMENT_DISABLED": "true"
       }
     }
   }
