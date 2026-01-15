@@ -2,17 +2,8 @@
 # Note: We use debian variant to allow future extensions if needed
 FROM n8nio/n8n:latest-debian
 
-# Set working directory
-WORKDIR /data
+# n8n uses /home/node/.n8n for data storage by default
+# No need to change working directory or copy files during build
+# Custom workflows should be imported via n8n UI or API after startup
 
-# Copy custom workflows and configurations
-COPY src/ /data/
-
-# Copy environment example
-COPY .env.example /data/.env.example
-
-# Expose n8n port
-EXPOSE 5678
-
-# Use default n8n startup command
-CMD ["n8n"]
+# The PORT environment variable is set by Railway and used by n8n via N8N_PORT
