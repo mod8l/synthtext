@@ -9,7 +9,11 @@ This guide explains how to deploy n8n on Railway with PostgreSQL.
 
 ## Environment Variables
 
-All necessary environment variables are configured in `railway.json`. Railway will automatically use these when deploying.
+Environment variables must be set manually in Railway. Railway doesn't automatically read variables from `railway.json`.
+
+**See [`RAILWAY_ENV_SETUP.md`](./RAILWAY_ENV_SETUP.md) for detailed setup instructions.**
+
+Quick reference: See [`.env.railway`](./.env.railway) for all required variables.
 
 ### Key Configuration Points
 
