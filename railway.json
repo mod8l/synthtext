@@ -2,45 +2,13 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile",
-    "buildCommand": null
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": null,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
     "healthcheckPath": "/healthz",
-    "healthcheckTimeout": 100
-  },
-  "environments": {
-    "production": {
-      "variables": {
-        "NODE_ENV": "production",
-        "N8N_PORT": "5678",
-        "N8N_PROTOCOL": "https",
-        "WEBHOOK_URL": "${RAILWAY_PUBLIC_DOMAIN}",
-        "N8N_INSECURE_FRONTEND_ALLOWLIST": "false",
-        "EXECUTIONS_PROCESS": "main",
-        "EXECUTIONS_MODE": "regular",
-        "GENERIC_TIMEZONE": "UTC",
-        "N8N_METRICS": "true",
-        "N8N_LOG_LEVEL": "info"
-      }
-    },
-    "staging": {
-      "variables": {
-        "NODE_ENV": "development",
-        "N8N_PORT": "5678",
-        "N8N_PROTOCOL": "https",
-        "WEBHOOK_URL": "${RAILWAY_PUBLIC_DOMAIN}",
-        "N8N_INSECURE_FRONTEND_ALLOWLIST": "true",
-        "EXECUTIONS_PROCESS": "main",
-        "EXECUTIONS_MODE": "regular",
-        "GENERIC_TIMEZONE": "UTC",
-        "N8N_METRICS": "true",
-        "N8N_LOG_LEVEL": "debug"
-      }
-    }
+    "healthcheckTimeout": 600
   }
 }
