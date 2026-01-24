@@ -53,7 +53,8 @@ CMD ["/bin/sh", "/app/scripts/start-railway.sh"]
 FROM base AS production
 
 # Security: Don't run as root
-RUN useradd -m -u 1000 n8n-user
+# node:20-slim already has 'node' user with UID 1000, so we use UID 1001
+RUN useradd -m -u 1001 n8n-user
 
 # Copy only necessary files
 COPY src/ /app/src/
@@ -61,15 +62,15 @@ COPY .env.example /app/.env.example
 COPY scripts/start-railway.sh /app/start-railway.sh
 
 # Copy any custom nodes if they exist
-COPY --chown=n8n-user:n8n-user . /app/
+COPY --chown=1001:1001 . /app/
 
 # Make startup script executable
 RUN chmod +x /app/start-railway.sh
 
-# Set ownership
-RUN chown -R n8n-user:n8n-user /app
+# Set ownership (using UID/GID explicitly to avoid name lookup issues)
+RUN chown -R 1001:1001 /app
 
-# Switch to non-root user
+# Switch to non-root user (UID 1001)
 USER n8n-user
 
 # Set environment for production
