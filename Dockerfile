@@ -1,9 +1,88 @@
-# Use n8n Debian variant as base
-# Note: We use debian variant to allow future extensions if needed
-FROM n8nio/n8n:latest-debian
+# Multi-stage build for n8n with AutoMarket OS customizations
 
-# n8n uses /home/node/.n8n for data storage by default
-# No need to change working directory or copy files during build
-# Custom workflows should be imported via n8n UI or API after startup
+# Stage 1: Base image with dependencies
+# Using Node.js base to avoid Docker Hub authentication issues with n8n:latest
+FROM node:20-slim AS base
 
-# The PORT environment variable is set by Railway and used by n8n via N8N_PORT
+# Set working directory
+WORKDIR /app
+
+# Install additional dependencies for AutoMarket integrations and n8n
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    jq \
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install n8n globally
+RUN npm install -g n8n
+
+# Stage 2: Development image with all tools
+FROM base AS development
+
+# Install development tools for debugging
+RUN apt-get update && apt-get install -y \
+    vim \
+    nano \
+    less \
+    net-tools \
+    iputils-ping \
+    dnsutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy project files
+COPY . /app/
+
+# Make startup script executable
+RUN chmod +x /app/scripts/start-railway.sh
+
+# Set environment for development
+ENV NODE_ENV=development
+ENV N8N_INSECURE_FRONTEND_ALLOWLIST=true
+ENV PORT=5678
+ENV N8N_PORT=5678
+ENV N8N_HOST=0.0.0.0
+
+EXPOSE 5678
+
+CMD ["/bin/sh", "/app/scripts/start-railway.sh"]
+
+# Stage 3: Production image (optimized)
+FROM base AS production
+
+# Security: Don't run as root
+RUN useradd -m -u 1000 n8n-user
+
+# Copy only necessary files
+COPY src/ /app/src/
+COPY .env.example /app/.env.example
+COPY scripts/start-railway.sh /app/start-railway.sh
+
+# Copy any custom nodes if they exist
+COPY --chown=n8n-user:n8n-user . /app/
+
+# Make startup script executable
+RUN chmod +x /app/start-railway.sh
+
+# Set ownership
+RUN chown -R n8n-user:n8n-user /app
+
+# Switch to non-root user
+USER n8n-user
+
+# Set environment for production
+ENV NODE_ENV=production
+ENV N8N_INSECURE_FRONTEND_ALLOWLIST=false
+ENV PORT=5678
+ENV N8N_PORT=5678
+ENV N8N_HOST=0.0.0.0
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:5678/healthz || exit 1
+
+EXPOSE 5678
+
+CMD ["n8n", "start"]
