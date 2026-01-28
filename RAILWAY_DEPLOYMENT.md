@@ -2,6 +2,15 @@
 
 This guide explains how to deploy n8n on Railway with PostgreSQL.
 
+## Important: Two Services Required
+
+Your Railway project must have **TWO services**:
+
+1. **PostgreSQL Database** (Railway-managed service)
+2. **n8n Application** (this repository)
+
+If you only see one service in your Railway dashboard, that's why the deployment is failing! Follow the deployment steps below to add the missing PostgreSQL service.
+
 ## Prerequisites
 
 1. A Railway account
@@ -93,16 +102,62 @@ Both environments are configured in `railway.json`:
 
 ## Troubleshooting
 
-### Healthcheck Failures
-If the deployment fails with healthcheck errors:
+### Healthcheck Failures: "service unavailable"
+If you see repeated healthcheck failures like:
+```
+Attempt #1 failed with service unavailable. Continuing to retry...
+Attempt #2 failed with service unavailable. Continuing to retry...
+...
+1/1 replicas never became healthy!
+Healthcheck failed!
+```
 
-1. **Check Deploy Logs** (not Build Logs) for n8n startup errors
-2. **Verify PostgreSQL is running** and connected
-3. **Wait longer** - First startup can take 5-10 minutes for:
-   - Database schema creation
-   - Initial migrations
-   - Workflow engine initialization
-4. **Verify environment variables** are set correctly in Railway dashboard
+**Root Causes:**
+
+1. **Missing Metrics Environment Variables** (Most Common)
+   - n8n only exposes the `/healthz` endpoint when metrics are enabled
+   - **Fix**: Ensure these variables are set in Railway:
+     ```bash
+     N8N_METRICS=true
+     N8N_METRICS_INCLUDE_API_ENDPOINTS=true
+     N8N_DIAGNOSTICS_ENABLED=true
+     ```
+
+2. **PostgreSQL Database Not Connected**
+   - n8n cannot start without a database connection
+   - **Fix**:
+     - Add PostgreSQL database service in Railway (see Step 1 above)
+     - Link the database to your n8n service
+     - Verify `DB_TYPE=postgresdb` and all `DB_POSTGRESDB_*` variables are set
+
+3. **Slow First Startup**
+   - First startup can take 5-10 minutes for:
+     - Database schema creation
+     - Initial migrations
+     - Workflow engine initialization
+   - **Fix**: The healthcheck timeout is set to 600 seconds (10 minutes) to allow this
+
+4. **Port Binding Issues**
+   - n8n might not be binding to the correct port
+   - **Fix**: Verify `N8N_PORT=${PORT}` and `N8N_HOST=0.0.0.0`
+
+**How to Debug:**
+
+1. **Check Deploy Logs** (not Build Logs):
+   - Railway Dashboard → Your Service → Deployments → Click on deployment → View Logs
+   - Look for n8n startup messages or error messages
+
+2. **Verify Environment Variables**:
+   - Railway Dashboard → Your Service → Variables tab
+   - Confirm all REQUIRED variables from `.env.example` are set
+
+3. **Check Database Status**:
+   - Railway Dashboard → PostgreSQL service
+   - Ensure it shows "Active" status
+
+4. **Test the Healthcheck Endpoint** (after fixing):
+   - Once deployed, visit: `https://your-domain.railway.app/healthz`
+   - Should return: `{"status": "ok"}`
 
 ### Database Connection Issues
 If n8n can't connect to PostgreSQL:
